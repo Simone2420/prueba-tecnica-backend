@@ -1,12 +1,17 @@
-import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { Controller } from '@nestjs/common';
+import { EventPattern, Payload } from '@nestjs/microservices';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  
+  @EventPattern('transaction.created')
+  handleTransactionCreated(@Payload() data: any) {
+    console.log(`[NotificationService] 🔔 New transaction created:`, data);
+    // Real implementation would send an email/webhook here
+  }
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @EventPattern('transaction.status_updated')
+  handleTransactionStatusUpdated(@Payload() data: any) {
+    console.log(`[NotificationService] 🔄 Transaction status updated to ${data.status}:`, data);
   }
 }
