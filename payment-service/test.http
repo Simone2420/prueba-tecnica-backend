@@ -1,0 +1,82 @@
+@baseUrl = http://localhost:3001
+@apiKey = ff4ae15c-cfed-482a-a0cb-c32a0f89769b
+
+### 1. Crear una transacción (Pending)
+# @name createTx
+POST {{baseUrl}}/transactions
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+  "amount": 150.50,
+  "currency": "GTQ",
+  "type": "payin",
+  "metadata": {
+    "order_id": "ORD-12345"
+  }
+}
+
+###
+
+@transactionId = {{createTx.response.body.id}}
+
+### 2. Obtener todas las transacciones del comercio
+GET {{baseUrl}}/transactions?page=1&limit=10
+x-api-key: {{apiKey}}
+
+###
+
+### 3. Obtener una transacción específica
+GET {{baseUrl}}/transactions/{{transactionId}}
+x-api-key: {{apiKey}}
+
+###
+
+### 4. Actualizar estado a "approved"
+PATCH {{baseUrl}}/transactions/{{transactionId}}/status
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+  "status": "approved"
+}
+
+###
+
+### 5. Actualizar estado a "completed" (Requerido para liquidación)
+PATCH {{baseUrl}}/transactions/{{transactionId}}/status
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+  "status": "completed"
+}
+
+###
+
+### 6. Intentar transición inválida (Completed -> Rejected) (Debe fallar)
+PATCH {{baseUrl}}/transactions/{{transactionId}}/status
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+  "status": "rejected"
+}
+
+###
+
+### 7. Crear una liquidación (Settlement)
+POST {{baseUrl}}/settlements
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+  "period_start": "2026-04-01T00:00:00Z",
+  "period_end": "2026-04-30T23:59:59Z"
+}
+
+###
+
+### 8. Obtener historial de liquidaciones
+GET {{baseUrl}}/settlements
+x-api-key: {{apiKey}}
