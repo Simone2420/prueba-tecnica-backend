@@ -15,27 +15,48 @@ app.use(morgan('dev'));
 
 import { authMiddleware } from './middlewares/auth.middleware';
 import rateLimit from 'express-rate-limit';
+import CircuitBreaker from 'opossum';
 
 // Rate limiting configuration
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' }
 });
 
-// Apply rate limiting to all requests
 app.use(limiter);
 
-// Protect the proxy routes with dual authentication
-app.use('/api/v1/payments', authMiddleware, createProxyMiddleware({
+// Circuit Breaker setup
+const breaker = new CircuitBreaker(async () => true, {
+  timeout: 3000, // If our dummy function takes longer than 3s, trigger a failure (won't happen here)
+  errorThresholdPercentage: 50, // When 50% of requests fail, open the circuit
+  resetTimeout: 10000 // After 10 seconds, try again
+});
+
+const proxy = createProxyMiddleware({
   target: PAYMENT_SERVICE_URL,
   changeOrigin: true,
   pathRewrite: {
     '^/api/v1/payments': '', 
   },
-}));
+  on: {
+    error: (err, req, res) => {
+      breaker.fire().catch(() => {}); // Manually register a failure
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Payment Service is down or unreachable' }));
+    }
+  }
+});
+
+// Protect the proxy routes with dual authentication and circuit breaker
+app.use('/api/v1/payments', authMiddleware, (req, res, next) => {
+  if (breaker.opened) {
+    return res.status(503).json({ error: 'Service Unavailable (Circuit Open)' });
+  }
+  proxy(req, res, next);
+});
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'api-gateway' });
