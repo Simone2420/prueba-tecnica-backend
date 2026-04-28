@@ -4,7 +4,7 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionStatusDto } from './dto/update-transaction-status.dto';
 import { ApiKeyGuard } from '../auth/guards/api-key/api-key.guard';
 import { CurrentMerchant } from '../auth/decorators/current-merchant/current-merchant.decorator';
-import { Merchant } from '@prisma/client';
+import type { Merchant } from '@prisma/client';
 
 @Controller('transactions')
 @UseGuards(ApiKeyGuard)

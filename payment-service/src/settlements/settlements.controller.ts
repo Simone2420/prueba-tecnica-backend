@@ -3,7 +3,7 @@ import { SettlementsService } from './settlements.service';
 import { CreateSettlementDto } from './dto/create-settlement.dto';
 import { ApiKeyGuard } from '../auth/guards/api-key/api-key.guard';
 import { CurrentMerchant } from '../auth/decorators/current-merchant/current-merchant.decorator';
-import { Merchant } from '@prisma/client';
+import type { Merchant } from '@prisma/client';
 
 @Controller('settlements')
 @UseGuards(ApiKeyGuard)
