@@ -14,8 +14,19 @@ app.use(helmet());
 app.use(morgan('dev'));
 
 import { authMiddleware } from './middlewares/auth.middleware';
+import rateLimit from 'express-rate-limit';
 
-// We will add rate limiting middleware here in the next steps
+// Rate limiting configuration
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+// Apply rate limiting to all requests
+app.use(limiter);
 
 // Protect the proxy routes with dual authentication
 app.use('/api/v1/payments', authMiddleware, createProxyMiddleware({
