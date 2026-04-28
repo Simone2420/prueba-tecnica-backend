@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionStatusDto } from './dto/update-transaction-status.dto';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject('NOTIFICATION_SERVICE') private readonly notificationClient: ClientProxy,
+  ) {}
 
   private generateReference(): string {
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -14,7 +18,7 @@ export class TransactionsService {
   }
 
   async create(merchantId: string, createDto: CreateTransactionDto) {
-    return this.prisma.transaction.create({
+    const transaction = await this.prisma.transaction.create({
       data: {
         merchant_id: merchantId,
         amount: createDto.amount,
@@ -25,6 +29,10 @@ export class TransactionsService {
         metadata: createDto.metadata,
       },
     });
+
+    this.notificationClient.emit('transaction.created', transaction);
+
+    return transaction;
   }
 
   async findAll(merchantId: string, page: number = 1, limit: number = 10) {
@@ -80,9 +88,17 @@ export class TransactionsService {
       );
     }
 
-    return this.prisma.transaction.update({
+    const updatedTransaction = await this.prisma.transaction.update({
       where: { id },
       data: { status: updateDto.status },
     });
+
+    this.notificationClient.emit('transaction.status_updated', {
+      id: updatedTransaction.id,
+      status: updatedTransaction.status,
+      reference: updatedTransaction.reference,
+    });
+
+    return updatedTransaction;
   }
 }
