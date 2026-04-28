@@ -13,10 +13,12 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 
-// We will add auth and rate limiting middleware here in the next steps
+import { authMiddleware } from './middlewares/auth.middleware';
 
-// Proxy configuration
-app.use('/api/v1/payments', createProxyMiddleware({
+// We will add rate limiting middleware here in the next steps
+
+// Protect the proxy routes with dual authentication
+app.use('/api/v1/payments', authMiddleware, createProxyMiddleware({
   target: PAYMENT_SERVICE_URL,
   changeOrigin: true,
   pathRewrite: {
