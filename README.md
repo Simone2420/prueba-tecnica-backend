@@ -1,17 +1,49 @@
-# Prueba Tecnica - Backend Developer
+# Sistema de Microservicios de Pagos - Prueba Técnica
 
-Bienvenido/a a la prueba tecnica para la posicion de **Backend Developer**. Esta prueba evalua tus habilidades en Node.js, TypeScript, NestJS, Express.js, PostgreSQL, Docker y arquitectura de microservicios.
+Este repositorio contiene la solución completa a la prueba técnica para la posición de Backend Developer. El sistema permite gestionar transacciones y liquidaciones de pagos de forma segura y escalable.
 
-## Como empezar
+## 🚀 Cómo ejecutar el proyecto (Docker)
 
-1. Haz un **fork** de este repositorio a tu cuenta de GitHub.
-2. Clona tu fork localmente.
-3. Lee [docs/01-requisitos-perfil.md](docs/01-requisitos-perfil.md) para entender el perfil esperado.
-4. Lee [docs/02-prueba-practica.md](docs/02-prueba-practica.md) para las instrucciones completas de la prueba.
-5. Lee [docs/03-instrucciones-entrega.md](docs/03-instrucciones-entrega.md) para saber como entregar tu solucion.
+La forma más sencilla de levantar todo el sistema es utilizando Docker Compose:
 
-## Tiempo Limite
+1. Asegúrate de tener Docker y Docker Compose instalados.
+2. Clona el repositorio.
+3. Ejecuta el comando:
+   ```bash
+   docker-compose up --build
+   ```
+4. El sistema estará disponible en:
+   - **API Gateway:** `http://localhost:3000`
+   - **Payment Service (Directo):** `http://localhost:3001`
+   - **Health Check:** `http://localhost:3000/api/v1/payments/health`
 
-**8 horas** desde el momento en que se comparte este repositorio con el candidato.
+## 🏗️ Arquitectura
+Para una explicación detallada del diseño, patrones de resiliencia y comunicación por eventos, consulta:
+👉 **[ARCHITECTURE.md](./ARCHITECTURE.md)**
 
-Exitos.
+## 🛡️ Seguridad
+- **JWT:** Protección de rutas mediante tokens.
+- **API Key:** Header `x-api-key` validado contra la base de datos de Merchants.
+- **Rate Limiting:** Máximo 100 peticiones cada 15 minutos por IP.
+- **Circuit Breaker:** Protección contra fallos en cascada entre el Gateway y el servicio de pagos.
+
+## 🧪 Pruebas Rápidas (PowerShell)
+
+**Crear una transacción:**
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/v1/payments/transactions" -Method Post -Headers @{ "x-api-key" = "ff4ae15c-cfed-482a-a0cb-c32a0f89769b" } -ContentType "application/json" -Body '{"amount": 100.0, "currency": "GTQ", "type": "payin", "metadata": {"order_id": "TEST-1"}}'
+```
+
+**Ver transacciones (Paginado):**
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/v1/payments/transactions?page=1&limit=10" -Method Get -Headers @{ "x-api-key" = "ff4ae15c-cfed-482a-a0cb-c32a0f89769b" }
+```
+
+## 🛠️ Stack Tecnológico
+- **Node.js / TypeScript**
+- **NestJS** (Services)
+- **Express.js** (Gateway)
+- **Prisma ORM**
+- **PostgreSQL**
+- **Redis** (Pub/Sub)
+- **Docker / Docker Compose**
