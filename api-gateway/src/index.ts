@@ -44,8 +44,10 @@ const proxy = createProxyMiddleware({
   on: {
     error: (err, req, res) => {
       breaker.fire().catch(() => {}); // Manually register a failure
-      res.writeHead(503, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Payment Service is down or unreachable' }));
+      if ('writeHead' in res) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payment Service is down or unreachable' }));
+      }
     }
   }
 });
