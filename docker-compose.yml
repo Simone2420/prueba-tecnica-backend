@@ -4,9 +4,9 @@ services:
     container_name: payments_postgres
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: payments_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payment_db
     ports:
       - "5432:5432"
     volumes:
@@ -28,7 +28,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      DATABASE_URL: "postgresql://user:password@postgres:5432/payments_db?schema=public"
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/payment_db?schema=public"
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: "super-secret-payment-key"
